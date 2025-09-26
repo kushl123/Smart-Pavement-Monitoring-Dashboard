@@ -1,0 +1,42 @@
+[
+    {
+        "id": "INC-20240615-001",
+        "type": "Pothole",
+        "severity": "High",
+        "location": "MG Road, Sector 5",
+        "detected_date": "2024-06-15",
+        "status": "Assigned",
+        "assigned_to": "Public Works",
+        "days_open": 2
+    },
+    {
+        "id": "INC-20240614-045",
+        "type": "Illegal Vendor Stall",
+        "severity": "Medium",
+        "location": "Market Square",
+        "detected_date": "2024-06-14",
+        "status": "In Progress",
+        "assigned_to": "Encroachment",
+        "days_open": 3
+    },
+    {
+        "id": "INC-20240613-128",
+        "type": "Garbage Dumping",
+        "severity": "Critical",
+        "location": "Residential Zone B",
+        "detected_date": "2024-06-13",
+        "status": "Resolved",
+        "assigned_to": "Sanitation",
+        "days_open": 0
+    },
+    {
+        "id": "INC-20240612-087",
+        "type": "Parked Vehicle Blocking",
+        "severity": "Medium",
+        "location": "School Road",
+        "detected_date": "2024-06-12",
+        "status": "Resolved",
+        "assigned_to": "Traffic Police",
+        "days_open": 0
+    }
+]

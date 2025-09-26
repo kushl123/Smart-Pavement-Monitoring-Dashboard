@@ -1,0 +1,22 @@
+[
+    {
+        "quarter":"Q1 2024",
+        "maintenance_costs":12000000,
+        "target":10000000
+    },
+    {
+        "quarter":"Q2 2024",
+        "maintenance_costs":9500000,
+        "target":10000000
+    },
+    {
+        "quarter":"Q3 2024",
+        "maintenance_costs":10800000,
+        "target":10000000
+    },
+    {
+        "quarter":"Q4 2024",
+        "maintenance_costs":14000000,
+        "target":10000000
+    }
+]

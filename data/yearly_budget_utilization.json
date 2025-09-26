@@ -1,0 +1,22 @@
+[
+    {
+        "year": 2021,
+        "utilization_rate": 85,
+        "target": 90
+    },
+    {
+        "year": 2022,
+        "utilization_rate": 92,
+        "target": 90
+    },
+    {
+        "year": 2023,
+        "utilization_rate": 78,
+        "target": 85
+    },
+    {
+        "year": 2024,
+        "utilization_rate": 95,
+        "target": 90
+    }
+]

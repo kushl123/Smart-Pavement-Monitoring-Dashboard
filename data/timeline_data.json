@@ -1,0 +1,62 @@
+[
+    {
+        "task_id": "T001",
+        "task_name": "AI System Deployment",
+        "department": "IT",
+        "start_date": "2024-01-15",
+        "end_date": "2024-02-28",
+        "status": "completed",
+        "completion_percentage": 100,
+        "team": "Tech Team Alpha"
+    },
+    {
+        "task_id": "T002",
+        "task_name": "Zone A Road Assessment",
+        "department": "Public Works",
+        "start_date": "2024-02-01",
+        "end_date": "2024-03-15",
+        "status": "completed",
+        "completion_percentage": 100,
+        "team": "Assessment Unit 1"
+    },
+    {
+        "task_id": "T003",
+        "task_name": "Pothole Repairs - Zone A",
+        "department": "Public Works",
+        "start_date": "2024-03-10",
+        "end_date": "2024-05-20",
+        "status": "in_progress",
+        "completion_percentage": 65,
+        "team": "Maintenance Crew 3"
+    },
+    {
+        "task_id": "T004",
+        "task_name": "Encroachment Removal - Market Area",
+        "department": "Encroachment",
+        "start_date": "2024-04-01",
+        "end_date": "2024-06-30",
+        "status": "in_progress",
+        "completion_percentage": 40,
+        "team": "Enforcement Unit 2"
+    },
+    {
+        "task_id": "T005",
+        "task_name": "Zone B Assessment",
+        "department": "Public Works",
+        "start_date": "2024-05-01",
+        "end_date": "2024-06-15",
+        "status": "planned",
+        "completion_percentage": 0,
+        "team": "Assessment Unit 2"
+    },
+    {
+        "task_id": "T006",
+        "task_name": "Vendor Zone Regulation",
+        "department": "Urban Planning",
+        "start_date": "2024-06-01",
+        "end_date": "2024-08-31",
+        "status": "planned",
+        "completion_percentage": 0,
+        "team": "Planning Committee"
+    }
+]

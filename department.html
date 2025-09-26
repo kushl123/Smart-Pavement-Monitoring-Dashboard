@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mumbai Pavement Monitoring - Department Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .navigation-cards {
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .nav-card {
+        display: flex;
+        align-items: center;
+        background-color: white;
+        border-radius: 8px;
+        padding: 16px 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        flex: 1;
+        min-width: 300px;
+        text-decoration: none;
+        color: var(--text-color);
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid var(--border-color);
+    }
+    
+    .nav-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+    }
+    
+    .nav-card-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background-color: rgba(52, 152, 219, 0.1);
+        border-radius: 12px;
+        margin-right: 16px;
+        color: var(--traffic-dept);
+    }
+    
+    .nav-card-content {
+        flex-grow: 1;
+    }
+    
+    .nav-card-content h3 {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+    
+    .nav-card-content p {
+        font-size: 13px;
+        color: #7f8c8d;
+        margin: 0;
+    }
+    
+    .nav-card-arrow {
+        font-size: 24px;
+        font-weight: 300;
+        color: #7f8c8d;
+        margin-left: 10px;
+    }
+        :root {
+            --waste-dept: #e74c3c;
+            --traffic-dept: #3498db;
+            --works-dept: #27ae60;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #e0e0e0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        .dashboard-container {
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        /* Scroll hint for departments */
+        .scroll-hint {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 100;
+            animation: pulse 2s infinite;
+            cursor: pointer;
+            display: none;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        @media (max-width: 1400px) {
+            .scroll-hint {
+                display: block;
+            }
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+        
+        select, button {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .departments-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        
+        .department-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            min-height: 800px;
+            min-width: 380px;
+            flex-shrink: 0;
+            transition: transform 0.3s;
+        }
+        
+        .department-panel:hover {
+            transform: translateY(-5px);
+        }
+        
+        .waste-dept {
+            border-top: 4px solid var(--waste-dept);
+        }
+        
+        .traffic-dept {
+            border-top: 4px solid var(--traffic-dept);
+        }
+        
+        .works-dept {
+            border-top: 4px solid var(--works-dept);
+        }
+        
+        .dept-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .dept-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .waste-icon { background-color: var(--waste-dept); }
+        .traffic-icon { background-color: var(--traffic-dept); }
+        .works-icon { background-color: var(--works-dept); }
+        
+        .dept-title h2 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .dept-title p {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            background: #e9ecef;
+            transform: scale(1.05);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-wrapper {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-wrapper canvas {
+            max-width: 100% !important;
+            max-height: 150px !important;
+            width: auto !important;
+            height: auto !important;
+        }
+        
+        .chart-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #7f8c8d;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .anomaly-list {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .anomaly-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .anomaly-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .anomaly-waste { background-color: rgba(231, 76, 60, 0.1); border-left: 4px solid var(--waste-dept); }
+        .anomaly-traffic { background-color: rgba(52, 152, 219, 0.1); border-left: 4px solid var(--traffic-dept); }
+        .anomaly-works { background-color: rgba(39, 174, 96, 0.1); border-left: 4px solid var(--works-dept); }
+        
+        .anomaly-severity {
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .severity-high { background-color: #e74c3c; }
+        .severity-medium { background-color: #f39c12; }
+        .severity-low { background-color: #27ae60; }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: slideUp 0.4s;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.3s;
+        }
+        
+        .modal-close:hover {
+            transform: scale(1.2);
+        }
+        
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .report-section {
+            margin-bottom: 25px;
+        }
+        
+        .report-section h3 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            color: #2c3e50;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px dashed #ecf0f1;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #7f8c8d;
+            flex: 1;
+        }
+        
+        .detail-value {
+            flex: 2;
+            text-align: right;
+            font-weight: 500;
+        }
+        
+        .report-image {
+            width: 100%;
+            height: 250px;
+            border-radius: 10px;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        #report-map {
+            height: 250px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .factors-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .factor-card {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .factor-value {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .factor-label {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 1200px) {
+            .departments-grid {
+                grid-template-columns: repeat(3, minmax(350px, 1fr));
+                overflow-x: auto;
+                scrollbar-width: thin;
+                scrollbar-color: #3498db #f0f0f0;
+            }
+            
+            .departments-grid::-webkit-scrollbar {
+                height: 8px;
+            }
+            
+            .departments-grid::-webkit-scrollbar-track {
+                background: #f0f0f0;
+                border-radius: 10px;
+            }
+            
+            .departments-grid::-webkit-scrollbar-thumb {
+                background: #3498db;
+                border-radius: 10px;
+            }
+            
+            .departments-grid::-webkit-scrollbar-thumb:hover {
+                background: #2980b9;
+            }
+            
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .departments-grid {
+                grid-template-columns: repeat(3, minmax(300px, 1fr));
+            }
+            
+            .department-panel {
+                min-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <div class="logo">
+                <h1>🚧 Mumbai Pavement Monitoring - Department Dashboard</h1>
+            </div>
+            <div class="controls">
+                <select id="date-filter">
+                    <option>Today</option>
+                    <option>Last 7 Days</option>
+                    <option>This Month</option>
+                </select>
+                <button id="refresh-btn">🔄 Refresh Data</button>
+            </div>
+            <div class="navigation-cards">
+                <a href="mainpage.html" class="nav-card">
+                    <div class="nav-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3>Executive Dashboard</h3>
+                        <p>Return to main dashboard with monitoring analytics</p>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+                
+                <a href="action_plan.html" class="nav-card">
+                    <div class="nav-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3>Action Plan</h3>
+                        <p>View and manage response strategies and maintenance schedules</p>
+                    </div>
+                    <div class="nav-card-arrow">→</div>
+                </a>
+            </div>
+        </header>
+        
+        <div class="scroll-hint" id="scroll-hint">
+            👉 Scroll right to see all departments
+        </div>
+        
+        <div class="departments-grid" id="departments-grid">
+            <!-- Waste Management Department -->
+            <div class="department-panel waste-dept">
+                <div class="dept-header">
+                    <div class="dept-icon waste-icon">🗑️</div>
+                    <div class="dept-title">
+                        <h2>Waste Management Department</h2>
+                        <p>Garbage, Construction Debris & Waste Issues</p>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Active Cases</div>
+                        <div class="stat-value" id="waste-active">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">High Priority</div>
+                        <div class="stat-value" id="waste-high">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg Volume (m³)</div>
+                        <div class="stat-value" id="waste-volume">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Hazardous Cases</div>
+                        <div class="stat-value" id="waste-hazard">0</div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Waste Volume Distribution</div>
+                        <canvas id="waste-volume-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Collection Priority</div>
+                        <canvas id="waste-priority-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Hazardous Material Alerts</div>
+                        <canvas id="waste-hazard-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Weekly Trends</div>
+                        <canvas id="waste-trend-chart"></canvas>
+                    </div>
+                </div>
+                
+                <h3>Recent Detections</h3>
+                <div class="anomaly-list" id="waste-anomalies">
+                    <!-- Anomalies will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Traffic Police Department -->
+            <div class="department-panel traffic-dept">
+                <div class="dept-header">
+                    <div class="dept-icon traffic-icon">🚓</div>
+                    <div class="dept-title">
+                        <h2>Traffic Police Department</h2>
+                        <p>Parked Vehicles & Traffic Obstructions</p>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Active Cases</div>
+                        <div class="stat-value" id="traffic-active">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">High Priority</div>
+                        <div class="stat-value" id="traffic-high">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Blockage %</div>
+                        <div class="stat-value" id="traffic-blockage">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Peak Violations</div>
+                        <div class="stat-value" id="traffic-peak">0</div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Vehicle Type Distribution</div>
+                        <canvas id="traffic-vehicle-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Peak Violation Hours</div>
+                        <canvas id="traffic-hours-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Blockage Severity</div>
+                        <canvas id="traffic-blockage-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Enforcement Rate</div>
+                        <canvas id="traffic-enforcement-chart"></canvas>
+                    </div>
+                </div>
+                
+                <h3>Recent Detections</h3>
+                <div class="anomaly-list" id="traffic-anomalies">
+                    <!-- Anomalies will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Public Works Department -->
+            <div class="department-panel works-dept">
+                <div class="dept-header">
+                    <div class="dept-icon works-icon">🛠️</div>
+                    <div class="dept-title">
+                        <h2>Public Works Department</h2>
+                        <p>Potholes & Infrastructure Issues</p>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Active Cases</div>
+                        <div class="stat-value" id="works-active">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">High Priority</div>
+                        <div class="stat-value" id="works-high">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg Depth (cm)</div>
+                        <div class="stat-value" id="works-depth">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Urgent Repairs</div>
+                        <div class="stat-value" id="works-urgent">0</div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Pothole Severity Matrix</div>
+                        <canvas id="works-severity-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Repair Urgency Timeline</div>
+                        <canvas id="works-urgency-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Location Impact Analysis</div>
+                        <canvas id="works-location-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Weekly Repair Progress</div>
+                        <canvas id="works-progress-chart"></canvas>
+                    </div>
+                </div>
+                
+                <h3>Recent Detections</h3>
+                <div class="anomaly-list" id="works-anomalies">
+                    <!-- Anomalies will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report Card Modal -->
+    <div class="modal" id="report-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 Anomaly Report Card</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="report-grid">
+                <div>
+                    <div class="report-section">
+                        <h3>🔍 Detection Details</h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Type:</span>
+                            <span class="detail-value" id="report-type">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Severity:</span>
+                            <span class="detail-value" id="report-severity">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Score:</span>
+                            <span class="detail-value" id="report-score">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Timestamp:</span>
+                            <span class="detail-value" id="report-time">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Camera:</span>
+                            <span class="detail-value" id="report-camera">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <h3>📈 Severity Factors</h3>
+                        <div class="factors-grid" id="report-factors">
+                            <!-- Factors will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <h3>🚨 Recommended Action</h3>
+                        <p id="report-action" style="background: #f8f9fa; padding: 15px; border-radius: 8px; font-weight: bold;">-</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="report-section">
+                        <h3>🖼️ Detection Image</h3>
+                        <img class="report-image" id="report-image" alt="Anomaly Image">
+                    </div>
+                    
+                    <div class="report-section">
+                        <h3>📍 Location Map</h3>
+                        <div id="report-map"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Real publicly available images for each anomaly type
+        const anomalyImages = {
+            'garbage': 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=500&h=300&fit=crop&crop=center',
+            'construction': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=500&h=300&fit=crop&crop=center',
+            'vehicle': 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=500&h=300&fit=crop&crop=center',
+            'pothole': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&h=300&fit=crop&crop=center'
+        };
+
+        // Enhanced sample data
+        const sampleData = [
+            {
+                incident_id: "INC-20241209-A8CE0A",
+                frame_number: 3,
+                device_name: "PoleCam_12",
+                timestamp: "2024-12-09T13:20:58Z",
+                location: {
+                    coordinates: { latitude: 19.061833, longitude: 72.901524 },
+                    direction: "Left-Bottom"
+                },
+                detections: [{
+                    type: "Garbage bin / dumped waste",
+                    raw_factors: { volume_cubic_m: 2.6, proximity_sensitive: false, hazardous: false },
+                    normalized_factors: { volume: 5.7, proximity: 3.0, hazardous: 1.0 },
+                    weights: { volume: 0.4, proximity: 0.4, hazardous: 0.2 },
+                    severity_score: 3.7,
+                    severity_category: "Medium",
+                    recommended_action: "Scheduled waste removal"
+                }]
+            },
+            {
+                incident_id: "INC-20241209-B9DF1B", 
+                frame_number: 5,
+                device_name: "PoleCam_12",
+                timestamp: "2024-12-09T13:21:00Z",
+                location: {
+                    coordinates: { latitude: 19.061818, longitude: 72.901543 },
+                    direction: "Left-Bottom"
+                },
+                detections: [{
+                    type: "Construction debris",
+                    raw_factors: { volume_cubic_m: 2.5, proximity_sensitive: false, hazardous: false },
+                    normalized_factors: { volume: 5.6, proximity: 3.0, hazardous: 1.0 },
+                    weights: { volume: 0.4, proximity: 0.4, hazardous: 0.2 },
+                    severity_score: 3.6,
+                    severity_category: "Medium", 
+                    recommended_action: "Scheduled waste removal"
+                }]
+            },
+            {
+                incident_id: "INC-20241209-C0EF2C",
+                frame_number: 6, 
+                device_name: "PoleCam_15",
+                timestamp: "2024-12-09T13:21:01Z",
+                location: {
+                    coordinates: { latitude: 19.06181, longitude: 72.901553 },
+                    direction: "Left-Bottom"
+                },
+                detections: [{
+                    type: "Parked vehicle (2-wheeler, car, or rickshaw)",
+                    raw_factors: { usable_width_blocked_percent: 48, vehicle_type: "car", accessibility_blocked: true },
+                    normalized_factors: { width: 4.8, vehicle_type: 10.0, accessibility: 10.0 },
+                    weights: { width: 0.4, vehicle_type: 0.25, accessibility: 0.35 },
+                    severity_score: 7.9,
+                    severity_category: "High",
+                    recommended_action: "Immediate enforcement/tow; Monitor persistence"
+                }]
+            },
+            {
+                incident_id: "INC-20241209-D1FG3D",
+                frame_number: 8,
+                device_name: "PoleCam_18", 
+                timestamp: "2024-12-09T13:21:03Z",
+                location: {
+                    coordinates: { latitude: 19.061794, longitude: 72.901572 },
+                    direction: "Left-Bottom"
+                },
+                detections: [{
+                    type: "Pothole",
+                    raw_factors: { depth_cm: 13.7, area_sq_m: 0.89, location_impact: "center_path" },
+                    normalized_factors: { depth: 9.2, area: 6.5, location: 10.0 },
+                    weights: { depth: 0.5, area: 0.35, location: 0.15 },
+                    severity_score: 8.4,
+                    severity_category: "High",
+                    recommended_action: "Immediate patch/repair"
+                }]
+            }
+        ];
+
+        // Department assignment
+        function assignDepartment(anomalyType) {
+            if (anomalyType.includes("Garbage") || anomalyType.includes("debris") || anomalyType.includes("waste")) {
+                return "waste";
+            } else if (anomalyType.includes("vehicle") || anomalyType.includes("Parked")) {
+                return "traffic"; 
+            } else if (anomalyType.includes("Pothole") || anomalyType.includes("infrastructure")) {
+                return "works";
+            }
+            return "waste";
+        }
+
+        // Get image for anomaly type
+        function getAnomalyImage(anomalyType) {
+            if (anomalyType.includes("Garbage") || anomalyType.includes("waste")) return anomalyImages.garbage;
+            if (anomalyType.includes("debris")) return anomalyImages.construction;
+            if (anomalyType.includes("vehicle")) return anomalyImages.vehicle;
+            if (anomalyType.includes("Pothole")) return anomalyImages.pothole;
+            return anomalyImages.garbage;
+        }
+
+        // Initialize all charts
+        function initCharts() {
+            // Waste Management Charts
+            initWasteCharts();
+            initTrafficCharts();
+            initWorksCharts();
+        }
+
+        function initWasteCharts() {
+            new Chart(document.getElementById('waste-volume-chart'), {
+                type: 'bar',
+                data: {
+                    labels: ['<2m³', '2-4m³', '4-6m³', '>6m³'],
+                    datasets: [{
+                        data: [12, 8, 5, 3],
+                        backgroundColor: ['#27ae60', '#f39c12', '#e67e22', '#e74c3c']
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                        x: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('waste-priority-chart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [5, 8, 4],
+                        backgroundColor: ['#e74c3c', '#f39c12', '#27ae60']
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { font: { size: 10 } }
+                        } 
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('waste-hazard-chart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Hazardous', 'Non-Hazardous'],
+                    datasets: [{
+                        data: [3, 14],
+                        backgroundColor: ['#e74c3c', '#27ae60']
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { font: { size: 10 } }
+                        } 
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('waste-trend-chart'), {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        data: [12, 15, 8, 14, 18, 10, 7],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                        x: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function initTrafficCharts() {
+            new Chart(document.getElementById('traffic-vehicle-chart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Cars', 'Bikes', 'Rickshaws', 'Trucks'],
+                    datasets: [{
+                        data: [45, 30, 15, 10],
+                        backgroundColor: ['#3498db', '#2980b9', '#1f618d', '#154360']
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { font: { size: 10 } }
+                        } 
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('traffic-hours-chart'), {
+                type: 'bar',
+                data: {
+                    labels: ['6-9', '9-12', '12-15', '15-18', '18-21'],
+                    datasets: [{
+                        data: [8, 12, 6, 15, 9],
+                        backgroundColor: '#3498db'
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                        x: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('traffic-blockage-chart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['<30%', '30-60%', '>60%'],
+                    datasets: [{
+                        data: [10, 15, 5],
+                        backgroundColor: ['#27ae60', '#f39c12', '#e74c3c']
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { font: { size: 10 } }
+                        } 
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('traffic-enforcement-chart'), {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        data: [65, 72, 68, 85],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                        x: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function initWorksCharts() {
+            new Chart(document.getElementById('works-severity-chart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Depth <5cm', 'Depth 5-10cm', 'Depth >10cm'],
+                    datasets: [{
+                        label: 'Low Severity',
+                        data: [8, 3, 1],
+                        backgroundColor: '#27ae60'
+                    }, {
+                        label: 'High Severity',
+                        data: [2, 5, 7],
+                        backgroundColor: '#e74c3c'
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { font: { size: 9 } }
+                        } 
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                        x: { ticks: { font: { size: 9 } } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('works-urgency-chart'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Urgent Repairs',
+                        data: [12, 15, 8, 20, 18, 25],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Regular Repairs',
+                        data: [25, 22, 30, 28, 35, 32],
+                        borderColor: '#27ae60',
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { font: { size: 9 } }
+                        } 
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                        x: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('works-location-chart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pedestrian Path', 'Cycle Lane', 'Road Shoulder', 'Crossing'],
+                    datasets: [{
+                        data: [40, 25, 20, 15],
+                        backgroundColor: ['#e74c3c', '#f39c12', '#3498db', '#27ae60']
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { font: { size: 9 } }
+                        } 
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('works-progress-chart'), {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                    datasets: [{
+                        label: 'Repairs Completed',
+                        data: [8, 12, 6, 15, 18, 10],
+                        borderColor: '#27ae60',
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { font: { size: 10 } }
+                        } 
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                        x: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        // Populate anomaly lists
+        function populateAnomalyLists() {
+            const wasteAnomalies = document.getElementById('waste-anomalies');
+            const trafficAnomalies = document.getElementById('traffic-anomalies');
+            const worksAnomalies = document.getElementById('works-anomalies');
+            
+            // Clear existing content
+            wasteAnomalies.innerHTML = '';
+            trafficAnomalies.innerHTML = '';
+            worksAnomalies.innerHTML = '';
+            
+            // Counters for statistics
+            const stats = {
+                waste: { active: 0, high: 0, volume: 0, hazard: 0 },
+                traffic: { active: 0, high: 0, blockage: 0, peak: 0 },
+                works: { active: 0, high: 0, depth: 0, urgent: 0 }
+            };
+            
+            sampleData.forEach(incident => {
+                incident.detections.forEach(detection => {
+                    const dept = assignDepartment(detection.type);
+                    const severityClass = `severity-${detection.severity_category.toLowerCase()}`;
+                    const anomalyClass = `anomaly-${dept}`;
+                    
+                    // Update statistics
+                    stats[dept].active++;
+                    if (detection.severity_category === 'High') stats[dept].high++;
+                    
+                    // Department-specific stats
+                    if (dept === 'waste') {
+                        stats.waste.volume += detection.raw_factors.volume_cubic_m || 0;
+                        if (detection.raw_factors.hazardous) stats.waste.hazard++;
+                    } else if (dept === 'traffic') {
+                        stats.traffic.blockage += detection.raw_factors.usable_width_blocked_percent || 0;
+                        stats.traffic.peak++;
+                    } else if (dept === 'works') {
+                        stats.works.depth += detection.raw_factors.depth_cm || 0;
+                        if (detection.severity_category === 'High') stats.works.urgent++;
+                    }
+                    
+                    // Create anomaly item
+                    const anomalyItem = document.createElement('div');
+                    anomalyItem.className = `anomaly-item ${anomalyClass}`;
+                    anomalyItem.innerHTML = `
+                        <div>
+                            <strong>${detection.type}</strong><br>
+                            <small>${new Date(incident.timestamp).toLocaleString()}</small>
+                        </div>
+                        <span class="anomaly-severity ${severityClass}">${detection.severity_category}</span>
+                    `;
+                    
+                    // Add click event to show report
+                    anomalyItem.addEventListener('click', () => showReport(incident, detection));
+                    
+                    // Append to appropriate department
+                    if (dept === 'waste') wasteAnomalies.appendChild(anomalyItem);
+                    else if (dept === 'traffic') trafficAnomalies.appendChild(anomalyItem);
+                    else if (dept === 'works') worksAnomalies.appendChild(anomalyItem);
+                });
+            });
+            
+            // Update statistics displays
+            updateStatistics(stats);
+        }
+
+        function updateStatistics(stats) {
+            // Waste Management
+            document.getElementById('waste-active').textContent = stats.waste.active;
+            document.getElementById('waste-high').textContent = stats.waste.high;
+            document.getElementById('waste-volume').textContent = stats.waste.active > 0 ? (stats.waste.volume / stats.waste.active).toFixed(1) : '0';
+            document.getElementById('waste-hazard').textContent = stats.waste.hazard;
+            
+            // Traffic Police
+            document.getElementById('traffic-active').textContent = stats.traffic.active;
+            document.getElementById('traffic-high').textContent = stats.traffic.high;
+            document.getElementById('traffic-blockage').textContent = stats.traffic.active > 0 ? Math.round(stats.traffic.blockage / stats.traffic.active) + '%' : '0%';
+            document.getElementById('traffic-peak').textContent = stats.traffic.peak;
+            
+            // Public Works
+            document.getElementById('works-active').textContent = stats.works.active;
+            document.getElementById('works-high').textContent = stats.works.high;
+            document.getElementById('works-depth').textContent = stats.works.active > 0 ? (stats.works.depth / stats.works.active).toFixed(1) : '0';
+            document.getElementById('works-urgent').textContent = stats.works.urgent;
+        }
+
+        // Show report modal
+        function showReport(incident, detection) {
+            const modal = document.getElementById('report-modal');
+            const factorsGrid = document.getElementById('report-factors');
+            
+            // Set basic information
+            document.getElementById('report-type').textContent = detection.type;
+            document.getElementById('report-severity').textContent = detection.severity_category;
+            document.getElementById('report-score').textContent = detection.severity_score.toFixed(1);
+            document.getElementById('report-time').textContent = new Date(incident.timestamp).toLocaleString();
+            document.getElementById('report-camera').textContent = incident.device_name;
+            document.getElementById('report-action').textContent = detection.recommended_action;
+            
+            // Set image
+            document.getElementById('report-image').src = getAnomalyImage(detection.type);
+            
+            // Populate factors
+            factorsGrid.innerHTML = '';
+            for (const [factor, value] of Object.entries(detection.normalized_factors)) {
+                const factorCard = document.createElement('div');
+                factorCard.className = 'factor-card';
+                factorCard.innerHTML = `
+                    <div class="factor-value">${value.toFixed(1)}</div>
+                    <div class="factor-label">${factor.replace(/_/g, ' ').toUpperCase()}</div>
+                `;
+                factorsGrid.appendChild(factorCard);
+            }
+            
+            // Initialize map
+            initReportMap(incident.location.coordinates);
+            
+            // Show modal
+            modal.style.display = 'flex';
+        }
+
+        // Initialize map for report
+        function initReportMap(coordinates) {
+            const mapContainer = document.getElementById('report-map');
+            mapContainer.innerHTML = ''; // Clear previous map
+            
+            const map = L.map('report-map').setView([coordinates.latitude, coordinates.longitude], 18);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            L.marker([coordinates.latitude, coordinates.longitude])
+                .addTo(map)
+                .bindPopup('Anomaly Location')
+                .openPopup();
+        }
+
+        // Close modal
+        document.querySelector('.modal-close').addEventListener('click', function() {
+            document.getElementById('report-modal').style.display = 'none';
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('report-modal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Refresh button functionality
+        document.getElementById('refresh-btn').addEventListener('click', function() {
+            this.textContent = '🔄 Refreshing...';
+            this.disabled = true;
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                populateAnomalyLists();
+                this.textContent = '🔄 Refresh Data';
+                this.disabled = false;
+                
+                // Show refresh confirmation
+                const originalText = this.textContent;
+                this.textContent = '✓ Data Updated!';
+                setTimeout(() => {
+                    this.textContent = originalText;
+                }, 2000);
+            }, 1500);
+        });
+
+        // Date filter functionality
+        document.getElementById('date-filter').addEventListener('change', function() {
+            // In a real application, this would filter the data based on the selected timeframe
+            console.log('Filtering data for:', this.value);
+            // For now, we'll just repopulate with the same data
+            populateAnomalyLists();
+        });
+
+        // Initialize the dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            populateAnomalyLists();
+            initScrollHint();
+            
+            // Add some sample data to demonstrate functionality
+            console.log('Mumbai Pavement Monitoring Dashboard initialized');
+            console.log('Sample data loaded:', sampleData.length, 'incidents');
+        });
+        
+        // Initialize scroll hint functionality
+        function initScrollHint() {
+            const departmentsGrid = document.getElementById('departments-grid');
+            const scrollHint = document.getElementById('scroll-hint');
+            
+            // Hide hint when user scrolls
+            departmentsGrid.addEventListener('scroll', function() {
+                if (scrollHint) {
+                    scrollHint.style.display = 'none';
+                }
+            });
+            
+            // Click hint to scroll to next department
+            if (scrollHint) {
+                scrollHint.addEventListener('click', function() {
+                    const scrollWidth = departmentsGrid.scrollWidth;
+                    const clientWidth = departmentsGrid.clientWidth;
+                    const scrollLeft = departmentsGrid.scrollLeft;
+                    
+                    // Calculate next scroll position (one department width)
+                    const departmentWidth = clientWidth / 2; // Approximate department width
+                    const nextScrollLeft = Math.min(scrollLeft + departmentWidth, scrollWidth - clientWidth);
+                    
+                    departmentsGrid.scrollTo({
+                        left: nextScrollLeft,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Hide hint after clicking
+                    this.style.display = 'none';
+                });
+            }
+            
+            // Check if scrolling is needed and show/hide hint accordingly
+            function checkScrollNeed() {
+                if (departmentsGrid && scrollHint) {
+                    const needsScroll = departmentsGrid.scrollWidth > departmentsGrid.clientWidth;
+                    scrollHint.style.display = needsScroll ? 'block' : 'none';
+                }
+            }
+            
+            // Check on resize
+            window.addEventListener('resize', checkScrollNeed);
+            
+            // Initial check
+            setTimeout(checkScrollNeed, 100);
+        }
+    </script>
+</body>
+</html> 

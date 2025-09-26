@@ -1,0 +1,44 @@
+[
+    {
+        "month": "Jan 2024",
+        "new_detections": 45,
+        "resolutions": 28,
+        "backlog": 45,
+        "critical_resolved": 3
+    },
+    {
+        "month": "Feb 2024",
+        "new_detections": 52,
+        "resolutions": 48,
+        "backlog": 49,
+        "critical_resolved": 7
+    },
+    {
+        "month": "Mar 2024",
+        "new_detections": 67,
+        "resolutions": 51,
+        "backlog": 65,
+        "critical_resolved": 9
+    },
+    {
+        "month": "Apr 2024",
+        "new_detections": 58,
+        "resolutions": 62,
+        "backlog": 61,
+        "critical_resolved": 12
+    },
+    {
+        "month": "May 2024",
+        "new_detections": 63,
+        "resolutions": 59,
+        "backlog": 65,
+        "critical_resolved": 8
+    },
+    {
+        "month": "Jun 2024",
+        "new_detections": 49,
+        "resolutions": 67,
+        "backlog": 47,
+        "critical_resolved": 11
+    }
+]

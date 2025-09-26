@@ -1,0 +1,11 @@
+{
+    "total_issues_detected": 347,
+    "resolved_issues": 218,
+    "resolution_rate": 62.8,
+    "critical_issues_open": 18,
+    "avg_resolution_time_days": 12.5,
+    "budget_utilized": 4700000,
+    "budget_total": 10000000,
+    "active_projects": 23,
+    "departments_involved": 6
+}

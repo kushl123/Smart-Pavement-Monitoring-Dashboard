@@ -1,0 +1,42 @@
+[
+    {
+        "department": "Public Works",
+        "issues_assigned": 156,
+        "issues_resolved": 112,
+        "completion_rate": 71.8,
+        "avg_resolution_days": 10.2,
+        "efficiency_score": 8.4
+    },
+    {
+        "department": "Encroachment",
+        "issues_assigned": 89,
+        "issues_resolved": 67,
+        "completion_rate": 75.3,
+        "avg_resolution_days": 7.2,
+        "efficiency_score": 8.7
+    },
+    {
+        "department": "Sanitation",
+        "issues_assigned": 54,
+        "issues_resolved": 39,
+        "completion_rate": 72.2,
+        "avg_resolution_days": 5.8,
+        "efficiency_score": 8.9
+    },
+    {
+        "department": "Urban Planning",
+        "issues_assigned": 32,
+        "issues_resolved": 18,
+        "completion_rate": 56.3,
+        "avg_resolution_days": 21.5,
+        "efficiency_score": 6.2
+    },
+    {
+        "department": "Traffic Police",
+        "issues_assigned": 16,
+        "issues_resolved": 12,
+        "completion_rate": 75.0,
+        "avg_resolution_days": 3.2,
+        "efficiency_score": 9.1
+    }
+]
